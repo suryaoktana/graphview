@@ -1,5 +1,7 @@
 part of graphview;
 
+
+
 class TreeEdgeRenderer extends EdgeRenderer {
   BuchheimWalkerConfiguration configuration;
 
@@ -7,9 +9,12 @@ class TreeEdgeRenderer extends EdgeRenderer {
 
   var linePath = Path();
 
+  
+
   @override
   void render(Canvas canvas, Graph graph, Paint paint) {
     var levelSeparationHalf = configuration.levelSeparation / 2;
+
 
     graph.nodes.forEach((node) {
       var children = graph.successorsOf(node);
@@ -20,17 +25,30 @@ class TreeEdgeRenderer extends EdgeRenderer {
         linePath.reset();
         switch (configuration.orientation) {
           case BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM:
-            // position at the middle-top of the child
-            linePath.moveTo((child.x + child.width / 2), child.y);
-            // draws a line from the child's middle-top halfway up to its parent
-            linePath.lineTo(child.x + child.width / 2, child.y - levelSeparationHalf);
-            // draws a line from the previous point to the middle of the parents width
-            linePath.lineTo(node.x + node.width / 2, child.y - levelSeparationHalf);
+        
+            if(child.isDottedLine){
+              var pattern = [5,5,5,5];
+              drawDashedLine(canvas:canvas,p1:Offset((child.x + child.width / 2), child.y), p2:Offset(child.x + child.width / 2, child.y - levelSeparationHalf), pattern:pattern,paint:edgePaint);
+              drawDashedLine(canvas:canvas,p1:Offset(child.x + child.width / 2, child.y - levelSeparationHalf), p2:Offset(node.x + node.width / 2, child.y - levelSeparationHalf), pattern:pattern,paint:edgePaint);
+              drawDashedLine(canvas:canvas,p1:Offset(node.x + node.width / 2, child.y - levelSeparationHalf), p2:Offset(node.x + node.width / 2, node.y + node.height), pattern:pattern,paint:edgePaint);
+              
 
-            // position at the middle of the level separation under the parent
-            linePath.moveTo(node.x + node.width / 2, child.y - levelSeparationHalf);
-            // draws a line up to the parents middle-bottom
-            linePath.lineTo(node.x + node.width / 2, node.y + node.height);
+            }
+            else{
+              // position at the middle-top of the child
+              linePath.moveTo((child.x + child.width / 2), child.y);
+              // draws a line from the child's middle-top halfway up to its parent
+              linePath.lineTo(child.x + child.width / 2, child.y - levelSeparationHalf);
+              // draws a line from the previous point to the middle of the parents width
+              linePath.lineTo(node.x + node.width / 2, child.y - levelSeparationHalf);
+
+              // position at the middle of the level separation under the parent
+              linePath.moveTo(node.x + node.width / 2, child.y - levelSeparationHalf);
+              // draws a line up to the parents middle-bottom
+              linePath.lineTo(node.x + node.width / 2, node.y + node.height);
+            }
+
+          
 
             break;
           case BuchheimWalkerConfiguration.ORIENTATION_BOTTOM_TOP:
@@ -64,4 +82,27 @@ class TreeEdgeRenderer extends EdgeRenderer {
       });
     });
   }
+
+  void drawDashedLine({
+  required Canvas canvas,
+  required Offset p1,
+  required Offset p2,
+  required List<int> pattern,
+  required Paint paint,
+}) {
+  assert(pattern.length.isEven);
+  final distance = (p2 - p1).distance;
+  final normalizedPattern = pattern.map((width) => width / distance).toList();
+  final points = <Offset>[];
+  double t = 0;
+  int i = 0;
+  while (t < 1) {
+    points.add(Offset.lerp(p1, p2, t)!);
+    t += normalizedPattern[i++];  // dashWidth
+    points.add(Offset.lerp(p1, p2, t.clamp(0, 1))!);
+    t += normalizedPattern[i++];  // dashSpace
+    i %= normalizedPattern.length;
+  }
+  canvas.drawPoints(ui.PointMode.lines, points, paint);
+}
 }

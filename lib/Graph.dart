@@ -155,8 +155,9 @@ class Node {
     this.key = ValueKey(key?.hashCode ?? data.hashCode);
   }
 
-  Node.Id(dynamic id) {
+  Node.Id(dynamic id, {bool isDottedLine = false}) {
     key = ValueKey(id);
+    this.isDottedLine = isDottedLine;
   }
 
   Size size = Size(0, 0);
@@ -170,6 +171,8 @@ class Node {
   double get x => position.dx;
 
   double get y => position.dy;
+
+  bool isDottedLine = false;
 
   set y(double value) {
     position = Offset(position.dx, value);

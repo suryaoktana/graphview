@@ -2,12 +2,14 @@ library graphview;
 
 import 'dart:collection';
 import 'dart:math';
+import 'dart:math' as math;
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:collection/collection.dart' show IterableExtension;
+import 'dart:ui' as ui;
 
 part 'Graph.dart';
 
@@ -239,11 +241,14 @@ class _GraphViewAnimated extends StatefulWidget {
   final Graph graph;
   final Algorithm algorithm;
   final Paint? paint;
-  final NodeWidgetBuilder builder;
+  final nodes = <Widget>[];
   final stepMilis = 25;
 
   _GraphViewAnimated(
-      {Key? key, required this.graph, required this.algorithm, this.paint, required this.builder}) {
+      {Key? key, required this.graph, required this.algorithm, this.paint, required NodeWidgetBuilder builder}) {
+    graph.nodes.forEach((node) {
+      nodes.add(node.data ?? builder(node));
+    });
   }
 
   @override
@@ -293,7 +298,7 @@ class _GraphViewAnimatedState extends State<_GraphViewAnimated> {
         ...List<Widget>.generate(graph.nodeCount(), (index) {
           return Positioned(
             child: GestureDetector(
-              child: graph.nodes[index].data ?? widget.builder(graph.nodes[index]),
+              child: widget.nodes[index],
               onPanUpdate: (details) {
                 graph.getNodeAtPosition(index).position += details.delta;
                 update();
